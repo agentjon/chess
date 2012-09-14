@@ -1,0 +1,107 @@
+<html>
+<head>
+	CHESS MASTER 2000
+</head>
+<body>
+	<p id="Coords">0,0</p>
+	<p id="ClickCoords">0,0</p>
+	<div style="height: 500px"></div>
+
+	<div style="text-align:center;">
+		<canvas id="myBoard" width="700" height="500" style="border:2px solid #000000; 
+		position: absolute; left: 50; top: 50; z-index: 1;"></canvas>
+		<canvas id="myPosition" width="700" height="500" style="
+		position: absolute; left: 50; top: 50; z-index: 2;"></canvas>
+		<canvas id="myPieces" width="700" height="500" style="
+		position: absolute; left: 50; top: 50; z-index: 3;"></canvas>
+
+		<script type="text/javascript" src="http://code.jquery.com/jquery-latest.js"></script>
+<!-- MouseEvents for pieces with callbacks-->
+		<script type="text/javascript">
+			$(document).ready(function(){
+				$("#myPieces").mousemove(function(e){
+					$('#Coords').html(e.offsetY +', '+ e.offsetX);
+						highlight(e.offsetY,e.offsetX);
+				}); 
+			})
+			jQuery(document).ready(function(){
+				$("#myPieces").click(function(e){
+					$('#ClickCoords').html(e.offsetY +', '+ e.offsetX);
+				}); 
+			})
+		// init canvas'
+			var c=document.getElementById("myBoard");
+			var ctx=c.getContext("2d");
+			var c2 = document.getElementById("myPosition");
+			var ctx2 = c2.getContext("2d");
+			var c3 = document.getElementById("myPieces");
+			var ctx3 = c3.getContext("2d");
+
+			initBoard();
+
+
+			ctx2.fillStyle="#555555";
+			ctx2.fillRect(500,48,48,448);
+
+			function highlight(y,x){
+				ctx2.clearRect(0, 0, myPosition.width, myPosition.height);
+				ctx2.fillRect(Math.floor(x/50)*50,Math.floor(y/50)*50,50,50);
+			}
+			function resetPieces(ctx3, myPieces) {
+				alert('Cleared'+ myPieces.width +' '+ myPieces.height);
+				ctx3.clearRect(0, 0, myPieces.width, myPieces.height);
+				var w = myPieces.width;
+				myPieces.width = 1;
+				myPieces.width = w;
+			}
+
+			function initBoard(){
+				ctx.fillStyle="#000000";
+				ctx.shadowOffsetX = 3;
+				ctx.shadowOffsetY = 3;
+				ctx.shadowBlur = 6;
+				ctx.shadowColor = "black";
+
+				ctx.fillStyle="#FFFFFF"; //whiteback
+				ctx.fillRect(50,50,400,400);
+
+				ctx.shadowOffsetX = 2;
+				ctx.shadowOffsetY = 2;
+				ctx.shadowBlur = 5;
+				ctx.fillStyle="#000000";
+
+				for(i=1; i<9; i++){
+					for(j=1; j<9; j++){
+						ctx.fillRect(i*50,j*50,50,50);
+						j++
+					}
+					i++
+				}
+				for(i=2; i<10; i++){
+					for(j=2; j<10; j++){
+						ctx.fillRect(i*50,j*50,50,50);
+						j++
+					}
+					i++
+				}
+
+				ctx.shadowOffsetX = 0;
+				ctx.shadowOffsetY = 0;
+				ctx.shadowBlur = 0;
+
+				ctx.beginPath();
+				ctx.lineWidth=2;
+				ctx.moveTo(49,49);
+				ctx.lineTo(49,449);
+				ctx.lineTo(449,449);
+				ctx.lineTo(449,49);
+				ctx.closePath();
+				ctx.stroke();
+			}
+		</script>
+	</div>
+	<button type="button" onclick="NewGame()">New Game</button>
+	<button type="button" onclick="RandomMove()">Random Move</button>
+</body>
+
+</html>
