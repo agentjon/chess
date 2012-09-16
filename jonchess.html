@@ -1,61 +1,366 @@
+<!-- Author @ Jon Ng 
+September 16, 2012-->
 <html>
 <head>
-	CHESS MASTER 2000
+	2 PLAYER CHESS MASTER 2000
 </head>
-<body>
-	<p id="Coords">0,0</p>
-	<p id="ClickCoords">0,0</p>
-	<div style="height: 500px"></div>
+<body style="background-color:#666666;">
 
-	<div style="text-align:center;">
+	<div style= "height: 500px "></div>
+
+	<div style=" align:center;">
 		<canvas id="myBoard" width="700" height="500" style="border:2px solid #000000; 
 		position: absolute; left: 50; top: 50; z-index: 1;"></canvas>
 		<canvas id="myPosition" width="700" height="500" style="
 		position: absolute; left: 50; top: 50; z-index: 2;"></canvas>
-		<canvas id="myPieces" width="700" height="500" style="
+		<canvas id="firstPost" width="700" height="500" style="
 		position: absolute; left: 50; top: 50; z-index: 3;"></canvas>
-
-		<script type="text/javascript" src="http://code.jquery.com/jquery-latest.js"></script>
-<!-- MouseEvents for pieces with callbacks-->
+		<canvas id="secPost" width="700" height="500" style="
+		position: absolute; left: 50; top: 50; z-index: 4;"></canvas>
+		<canvas id="myPieces" width="700" height="500" style="
+		position: absolute; left: 50; top: 50; z-index: 5;"></canvas>
+		
+		<img id="blueDot" src="blueDot.png" alt="blue dot" style="visibility:hidden">
+		<img id="redDot" src="redDot.png" alt="red dot" style="visibility:hidden">
+		<img id="greenDot" src="greenDot.png" alt="green dot" style="visibility:hidden">
+		
+		<!-- load jquery lib -->
+		<script type="text/javascript" src="jquery.js"></script>
+		<!-- load piece types -->
+		<script type="text/javascript" src="pieces.js"></script>
 		<script type="text/javascript">
-			$(document).ready(function(){
-				$("#myPieces").mousemove(function(e){
-					$('#Coords').html(e.offsetY +', '+ e.offsetX);
-						highlight(e.offsetY,e.offsetX);
-				}); 
-			})
-			jQuery(document).ready(function(){
-				$("#myPieces").click(function(e){
-					$('#ClickCoords').html(e.offsetY +', '+ e.offsetX);
-				}); 
-			})
-		// init canvas'
+			var firstClick=true;
+			var posStr;	//coord for blue moving
+			var typeStr; //name of piece
+			var letterArr = ["A","B","C","D","E","F","G","H"];
+			var x1,y1,x2,y2; //coords for selections
+			var ori = 1; //1=whiteLEFT, 2=whiteBOT, 3=whiteRIGHT, 4whiteTOP
+			var turn = 1;
+
+			//canvas reference and context
 			var c=document.getElementById("myBoard");
 			var ctx=c.getContext("2d");
 			var c2 = document.getElementById("myPosition");
 			var ctx2 = c2.getContext("2d");
-			var c3 = document.getElementById("myPieces");
+			var c3 = document.getElementById("firstPost");
 			var ctx3 = c3.getContext("2d");
+			var c4 = document.getElementById("secPost");
+			var ctx4 = c4.getContext("2d");
+			var c5 = document.getElementById("myPieces");
+			var ctx5 = c5.getContext("2d");
 
+			//highlighting piece & position selections
+			var blueHighlight=document.getElementById("blueDot");
+			var redHighlight=document.getElementById("redDot");
+			var greenHighlight=document.getElementById("greenDot");
+
+			//black pieces = 0 (false)
+			var p21 = new pawn(0); // pawn 1
+			var p22 = new pawn(0); // pawn 1
+			var p23 = new pawn(0); // pawn 1
+			var p24 = new pawn(0); // pawn 1
+			var p25 = new pawn(0); // pawn 1
+			var p26 = new pawn(0); // pawn 1
+			var p27 = new pawn(0); // pawn 1
+			var p28 = new pawn(0); // pawn 1
+
+			var p2r = new rook(0); // rook 2
+			var p2h = new knight(0); // knight 3 
+			var p2b = new bishop(0); // bishop 4
+			var p2q = new queen(0); // queen 5
+			var p2k = new king(0); // king 6
+
+			//white pieces = 1 (true)
+			var p11 = new pawn(1); // pawn 1
+			var p12 = new pawn(1); // pawn 1
+			var p13 = new pawn(1); // pawn 1
+			var p14 = new pawn(1); // pawn 1
+			var p15 = new pawn(1); // pawn 1
+			var p16 = new pawn(1); // pawn 1
+			var p17 = new pawn(1); // pawn 1
+			var p18 = new pawn(1); // pawn 1
+
+			var p1r = new rook(1); // rook 2
+			var p1h = new knight(1); // knight 3 
+			var p1b = new bishop(1); // bishop 4
+			var p1q = new queen(1); // queen 5
+			var p1k = new king(1); // king 6
+
+			var non = new none();
+
+			var validArray = new Array();
+			var arr = new Array();
+			// var piecesArr = [	[p1r,p1h,p1b,p1k,p1q,p1b,p1h,p1r],
+			// 					[p11,p12,p13,p14,p15,p16,p17,p18],
+			// 					[non,non,non,non,non,non,non,non],
+			// 					[non,non,non,non,non,non,non,non],
+			// 					[non,non,non,non,non,p1k,non,non],
+			// 					[non,non,non,non,non,non,non,non],
+			// 					[p21,p22,p23,p24,p25,p26,p27,p28],
+			// 					[p2r,p2h,p2b,p2q,p2k,p2b,p2h,p2r]	];
+
+			var piecesArr = [	[p1r,p1h,p1b,p1k,p1q,p1b,p1h,p1r],
+								[p11,p12,p13,p14,non,non,non,non],
+								[non,non,non,non,non,non,non,non],
+								[non,non,non,non,non,non,non,non],
+								[non,non,non,non,non,non,non,non],
+								[non,non,non,non,non,non,non,non],
+								[p21,p22,p23,p24,non,non,non,non],
+								[p2r,p2h,p2b,p2q,p2k,p2b,p2h,p2r]	];
+			piecesArr = rotate2d(piecesArr);
+
+//	MouseEvents for pieces with callbacks
+			$(document).ready(function(){
+				$("#myPieces").mousemove(function(e){
+					$('#Coords').html(e.pageX +', '+ e.pageY);
+						blue_highlight(e.pageX,e.pageY);
+				}); 
+			})
+			// jQuery(document).ready(function(){
+			$(document).ready(function(){
+				$("#myPieces").click(function(e){
+					$('#ClickCoords').html(e.pageX +', '+ e.pageY);
+						if(firstClick==true){
+							green_highlight(e.pageX,e.pageY);
+						}
+						else if(firstClick==false){
+							red_highlight(e.pageX,e.pageY);
+						}
+				}); 
+			})
 			initBoard();
+			drawPieces();
 
-
-			ctx2.fillStyle="#555555";
-			ctx2.fillRect(500,48,48,448);
-
-			function highlight(y,x){
-				ctx2.clearRect(0, 0, myPosition.width, myPosition.height);
-				ctx2.fillRect(Math.floor(x/50)*50,Math.floor(y/50)*50,50,50);
+			function pawn(colorP){
+				//check orientation
+				//ori 1=whiteLEFT, 2=whiteBOT, 3=whiteRIGHT, 4whiteTOP
+				this.color = (colorP) ? "White" : "Black";
+				this.colorID = (colorP) ? 1 : -1;
+				this.firstMove = 1; // true
+				this.talk = function() {
+					return this.color+" "+this.firstMove;
+				}
+				this.checkValidMove = function(x1,y1,x2,y2){
+					// console.log("checkingpawn")
+					if(piecesArr[x1][y1].color=="Black"){//BLACK PAWNS only
+						switch(ori){//all different orientations of the board 
+							case 1://white LEFT																					up attack																						down attack
+								if(x1-x2<2+this.firstMove&&x1-x2>0&&y2-y1==0&&piecesArr[x2][y2].colorID==0 || x2-x1==-1&&y2-y1==-1&&piecesArr[x2][y2].colorID==-(this.colorID) || x2-x1==-1&&y2-y1==1&&piecesArr[x2][y2].colorID==-(this.colorID))
+									return true;
+								break;
+							case 2://white BOT 																					left attack																						right attack
+								if(y2-y1<2+this.firstMove&&y2-y1>0&&x2-x1==0&&piecesArr[x2][y2].colorID==0 || x2-x1==-1&&y2-y1==1&&piecesArr[x2][y2].colorID==-(this.colorID) || x2-x1==1&&y2-y1==1&&piecesArr[x2][y2].colorID==-(this.colorID))
+									return true;
+								break;
+							case 3://white RIGHT																					down attack																						up attack
+								if(x2-x1<2+this.firstMove&&x2-x1>0&&y2-y1==0&&piecesArr[x2][y2].colorID==0 || x2-x1==1&&y2-y1==1&&piecesArr[x2][y2].colorID==-(this.colorID) || x2-x1==1&&y2-y1==-1&&piecesArr[x2][y2].colorID==-(this.colorID))
+									return true;
+								break;
+							case 4://white TOP																					left attack																						right attack
+								if(y1-y2<2+this.firstMove&&y1-y2>0&&x2-x1==0&&piecesArr[x2][y2].colorID==0 || x2-x1==-1&&y2-y1==-1&&piecesArr[x2][y2].colorID==-(this.colorID) || x2-x1==1&&y2-y1==-1&&piecesArr[x2][y2].colorID==-(this.colorID))
+									return true;
+								break;
+							default://nothing
+						}
+					}
+					else{//WHITE PAWNS only
+						switch(ori){
+							case 1://white LEFT
+								if(x2-x1<2+this.firstMove&&x2-x1>0&&y2-y1==0&&piecesArr[x2][y2].colorID==0 || x2-x1==1&&y2-y1==-1&&piecesArr[x2][y2].colorID==-(this.colorID) || x2-x1==1&&y2-y1==1&&piecesArr[x2][y2].colorID==-(this.colorID))
+									return true;
+								break;
+							case 2://white BOT																					left attack			 																			right attack
+								if(y1-y2<2+this.firstMove&&y1-y2>0&&x2-x1==0&&piecesArr[x2][y2].colorID==0 || x2-x1==-1&&y2-y1==-1&&piecesArr[x2][y2].colorID==-(this.colorID) || x2-x1==1&&y2-y1==-1&&piecesArr[x2][y2].colorID==-(this.colorID))
+									return true;
+								break;
+							case 3://white RIGHT
+								if(x1-x2<2+this.firstMove&&x1-x2>0&&y2-y1==0&&piecesArr[x2][y2].colorID==0 || x2-x1==-1&&y2-y1==1&&piecesArr[x2][y2].colorID==-(this.colorID) || x2-x1==-1&&y2-y1==-1&&piecesArr[x2][y2].colorID==-(this.colorID))
+									return true;
+								break;
+							case 4://white TOP
+								if(y2-y1<2+this.firstMove&&y2-y1>0&&x2-x1==0&&piecesArr[x2][y2].colorID==0 || x2-x1==-1&&y2-y1==1&&piecesArr[x2][y2].colorID==-(this.colorID) || x2-x1==1&&y2-y1==1&&piecesArr[x2][y2].colorID==-(this.colorID))
+									return true;
+								break;
+							default://nothing
+						}
+					}
+				return false;
+				}//checkValid
+			}//pawn
+			function movePiece(x1,y1,x2,y2){
+				if(piecesArr[x1][y1] instanceof pawn){
+					piecesArr[x1][y1].firstMove=false;
+					switch(ori){
+						case 1: 
+							break;
+						case 2: 
+							if(y2==0){
+								// alert("promoted!");
+								piecesArr[x1][y1]=p1q;
+							}
+							else if(y2==7){
+								// alert("promoted!");
+								piecesArr[x1][y1]=p2q;
+							}
+							break;
+						case 3:
+							break;
+						case 4:
+							break;
+						default://nothing
+					}
+					// console.log(piecesArr[x1][y1].firstMove)
+				}
+				piecesArr[x2][y2]=piecesArr[x1][y1];
+				piecesArr[x1][y1]=non;
+				drawPieces();
 			}
-			function resetPieces(ctx3, myPieces) {
-				alert('Cleared'+ myPieces.width +' '+ myPieces.height);
-				ctx3.clearRect(0, 0, myPieces.width, myPieces.height);
+			function drawPieces(){
+				ctx5.clearRect(0, 0, myPosition.width, myPosition.height);
+				for (r = 0; r < 8; r++){
+					for (c = 0; c < 8; c++){
+						ctx5.font = "6pt Arial";
+						// if(piecesArr[r][c].color == "White" || piecesArr[r][c].color == "Black"){
+							ctx5.fillText(piecesArr[r][c].talk(),r*50+55,c*50+75);
+						// }
+					}
+				}
+			}
+			function blue_highlight(x,y){ //CURRENT POSITION
+				ctx2.clearRect(0, 0, myPosition.width, myPosition.height);
+				// if(turn==1)
+				// 	ctx2.fillText("White's Turn", 500, 400);
+				// else
+				// 	ctx2.fillText("Black's Turn", 500, 400)
+
+				if(y>100&&x>100&&y<500&&x<500){ //only draw on the actual board
+					ctx2.drawImage(blueHighlight,Math.floor(x/50)*50-50,Math.floor(y/50)*50-50,50,50);
+					// posStr = ((letterArr[Math.floor(x/50)-2]) +","+ (Math.floor(y/50)-2).toString();
+					ctx2.fillText(letterArr[Math.floor(x/50)-2]+","+ (Math.floor(y/50)-1).toString(), 550, 50);
+					// ctx2.fillText(posStr, 550, 50);
+				}
+			}
+			function green_highlight(x,y){ //SELECT PIECE
+				if(y>100&&x>100&&y<500&&x<500){ //only draw on the actual board
+					x1=Math.floor(x/50)-2
+					y1=Math.floor(y/50)-2
+					ctx3.clearRect(0, 0, myPosition.width, myPosition.height);
+					
+					if(piecesArr[x1][y1].colorID == -1 && turn == 1)
+						alert("White's move..")
+					else if(piecesArr[x1][y1].colorID == 1 && turn == -1)
+						alert("Black's move..")
+					else if(firstClick==true){
+						posStr = (Math.floor(x/50)-2).toString() +","+ (Math.floor(y/50)-2).toString();
+						ctx3.fillText(posStr, 500, 150);
+						//TODO if piecesArr[x][y] not correct color then cant move it
+						typeStr = piecesArr[x1][y1].talk();
+						ctx3.fillText(typeStr, 500, 100);
+						if(piecesArr[x1][y1].color=="White" || piecesArr[x1][y1].color=="Black"){
+							ctx3.drawImage(greenHighlight,Math.floor(x/50)*50-50,Math.floor(y/50)*50-50,50,50);
+							firstClick=false;
+							
+						}
+					}
+				}
+			}
+			function red_highlight(x,y){ //MOVE TO POSITION
+				if(y>100&&x>100&&y<500&&x<500){ //only draw on the actual board
+					x2=Math.floor(x/50)-2
+					y2=Math.floor(y/50)-2
+					ctx4.clearRect(0, 0, myPosition.width, myPosition.height);
+					if(piecesArr[x2][y2].colorID == piecesArr[x1][y1].colorID){
+						firstClick=true;
+						green_highlight(x,y);
+					}
+					else if(firstClick==false){
+						posStr = (x2).toString() +","+ (y2).toString();
+						ctx4.fillText(posStr, 550, 150);
+						if(piecesArr[x1][y1].checkValidMove(x1,y1,x2,y2) && piecesArr[x1][y1].colorID!=piecesArr[x2][y2].colorID){//not same color
+							ctx4.drawImage(greenHighlight,Math.floor(x/50)*50-50,Math.floor(y/50)*50-50,50,50);
+							// alert("move is valid");
+							movePiece(x1,y1,x2,y2);
+							firstClick=true;
+							turn=turn*-1;
+							if(turn==1)
+								ctx4.fillText("White's Turn", 500, 400);
+							else
+								ctx4.fillText("Black's Turn", 500, 400);
+						}
+						else ctx4.drawImage(redHighlight,Math.floor(x/50)*50-50,Math.floor(y/50)*50-50,50,50);
+					}
+				}
+			}
+			function resetPieces() {
+				ctx5.clearRect(0, 0, myPieces.width, myPieces.height);
 				var w = myPieces.width;
 				myPieces.width = 1;
 				myPieces.width = w;
-			}
 
+				//reset all firstmoves and promotions of pawns
+				//black pieces = 0 (false)
+				p21 = new pawn(0); // pawn 1
+				p22 = new pawn(0); // pawn 1
+				p23 = new pawn(0); // pawn 1
+				p24 = new pawn(0); // pawn 1
+				p25 = new pawn(0); // pawn 1
+				p26 = new pawn(0); // pawn 1
+				p27 = new pawn(0); // pawn 1
+				p28 = new pawn(0); // pawn 1
+				//white pieces = 1 (true)
+				p11 = new pawn(1); // pawn 1
+				p12 = new pawn(1); // pawn 1
+				p13 = new pawn(1); // pawn 1
+				p14 = new pawn(1); // pawn 1
+				p15 = new pawn(1); // pawn 1
+				p16 = new pawn(1); // pawn 1
+				p17 = new pawn(1); // pawn 1
+				p18 = new pawn(1); // pawn 1
+
+				ori=1;//orientation
+				piecesArr = [	[p1r,p1h,p1b,p1k,p1q,p1b,p1h,p1r],
+									[p11,p12,p13,p14,p15,p16,p17,p18],
+									[non,non,non,non,non,non,non,non],
+									[non,non,non,non,non,non,non,non],
+									[non,non,non,non,non,non,non,non],
+									[non,non,non,non,non,non,non,non],
+									[p21,p22,p23,p24,p25,p26,p27,p28],
+									[p2r,p2h,p2b,p2q,p2k,p2b,p2h,p2r]	];
+				piecesArr = rotate2d(piecesArr);
+				turn = 1;//white start
+				firstClick = true;
+				drawPieces();
+				//TODO draw the pieces again 
+			}
+			function rotateBoard(){
+				piecesArr = rotate2d(piecesArr);
+				drawPieces();
+			}
+			function rotate2d(array){
+				//http://stackoverflow.com/questions/2799755/rotate-array-clockwise
+				R = array.length;
+				C = array[0].length;
+				var newArray = new Array(8);
+				for (var i = 0; i < 8; i++) {
+					newArray[i] = new Array(8);
+				}
+				for (r = 0; r < R; r++) {
+					for (c = 0; c < C; c++) {
+						newArray[c][R-1-r] = array[r][c];
+					}
+				}
+				//Orientation
+				ori++;
+				if (ori==5)
+					ori=1;
+
+				return newArray;
+			}
 			function initBoard(){
+				ctx2.font = "14pt Arial";
+				ctx3.font = "14pt Arial";
+				ctx4.font = "14pt Arial";
+
 				ctx.fillStyle="#000000";
 				ctx.shadowOffsetX = 3;
 				ctx.shadowOffsetY = 3;
@@ -72,17 +377,17 @@
 
 				for(i=1; i<9; i++){
 					for(j=1; j<9; j++){
-						ctx.fillRect(i*50,j*50,50,50);
-						j++
+						// ctx.fillRect(i*50,j*50,50,50);
+						j++;
 					}
-					i++
+					i++;
 				}
 				for(i=2; i<10; i++){
 					for(j=2; j<10; j++){
-						ctx.fillRect(i*50,j*50,50,50);
-						j++
+						// ctx.fillRect(i*50,j*50,50,50);
+						j++;
 					}
-					i++
+					i++;
 				}
 
 				ctx.shadowOffsetX = 0;
@@ -97,11 +402,26 @@
 				ctx.lineTo(449,49);
 				ctx.closePath();
 				ctx.stroke();
+				for(i=0;i<8;i++){
+					ctx.fillText(letterArr[i],i*50+75,25);
+				}
+				for(i=0;i<8;i++){
+					ctx.fillText(i+1,25,i*50+75);
+				}
 			}
 		</script>
 	</div>
-	<button type="button" onclick="NewGame()">New Game</button>
-	<button type="button" onclick="RandomMove()">Random Move</button>
+
+	<button type="button" onclick="resetPieces()">New Game</button>
+	<button type="button" onclick="rotateBoard()">Rotate Board</button>
+	<button type="button" onclick="randomMove()">Random Move</button>
+
+	<!-- <button type="button" onclick="highlightPaths()">Highlight Paths</button> -->
+
+	<p id="Coords">0,0</p>
+	<p id="ClickCoords">0,0</p>
+	<p id="CellCoords">0,0</p>
+
 </body>
 
 </html>
