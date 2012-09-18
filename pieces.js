@@ -134,6 +134,17 @@
 					return this.color+" King "+this.firstMove;
 				}
 				this.checkValidMove = function(x1,y1,x2,y2){
+					//CASTLE case 2 orientation
+					// if(piecesArr[4][7].colorID==1)//white is on bot
+					// 	if(x2==6&&y2==7&&piecesArr[7][7].firstMove==true&&piecesArr[6][7].colorID==0&&piecesArr[5][7].colorID==0)
+					// 		return true;//right side castle
+					// 	else if(x2==2&&y2==7&&piecesArr[7][0].firstMove==true&&piecesArr[1][7].colorID==0&&piecesArr[2][7].colorID==0&&piecesArr[3][7].colorID==0)
+					// 		return true;//left side castle
+					// if(piecesArr[4][0].colorID==-1)//black is on top
+					// 	if(x2==0&&y2==0&&piecesArr[0][0].firstMove==true&&piecesArr[1][0].colorID==0&&piecesArr[2][0].colorID==0&&piecesArr[3][0].colorID==0)
+					// 		return true;//left side castle
+					// 	else if(x2==7&&y2==0&&piecesArr[7][0].firstMove==true&&piecesArr[6][0].colorID==0&&piecesArr[5][0].colorID==0)
+					// 		return true;//right side castle
 					if(piecesArr[x1][y1].colorID==piecesArr[x2][y2].colorID) return false;
 					if(Math.abs(x2-x1)<2 && Math.abs(y2-y1)<2){
 						return true;

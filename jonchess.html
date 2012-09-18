@@ -2,11 +2,16 @@
 September 16, 2012-->
 <html>
 <head>
-	2 PLAYER CHESS MASTER 2000
+	<div>2 PLAYER CHESS MASTER 3000</div>
 </head>
 <body style="background-color:#666666;">
-
-	<div style= "height: 500px "></div>
+	<button type="button" onclick="resetPieces()">New Game</button>
+	<!-- <button type="button" onclick="rotateBoard()">Rotate Board</button> -->
+	<button type="button" onclick="randomMove()">Random Move</button>
+	<button type="button" onclick="randomMoveInterval()">Random Move 0.1s Interval</button>
+	<button type="button" onclick="stopInterval()">Stop Interval</button>	
+	<button type="button" onclick="highlightPaths()">Highlight Paths</button>
+	<div style= "height: 400px "></div>
 
 	<div style=" align:center;">
 		<canvas id="myBoard" width="700" height="500" style="border:2px solid #000000; 
@@ -24,12 +29,14 @@ September 16, 2012-->
 		<img id="redDot" src="redDot.png" alt="red dot" style="visibility:hidden">
 		<img id="greenDot" src="greenDot.png" alt="green dot" style="visibility:hidden">
 		<img id="yellowDot" src="yellowDot.png" alt="yellow dot" style="visibility:hidden">
+		<img id="window" src="win.png" alt="win" style="visibility:hidden">
 		
 		<!-- load jquery lib -->
 		<script type="text/javascript" src="jquery.js"></script>
 		<!-- load piece types -->
 		<script type="text/javascript" src="pieces.js"></script>
 		<script type="text/javascript">
+			var myInt;
 			var firstClick=true;
 			var posStr;	//coord for blue moving
 			var typeStr; //name of piece
@@ -57,6 +64,8 @@ September 16, 2012-->
 			var redHighlight=document.getElementById("redDot");
 			var greenHighlight=document.getElementById("greenDot");
 			var yellowHighlight=document.getElementById("yellowDot");
+			var piecesPNG=document.getElementById("window");
+
 
 			//black pieces = 0 (false)
 			var p21 = new pawn(0); // pawn 1
@@ -102,23 +111,23 @@ September 16, 2012-->
 			var checkCoord = new Array();
 
 			var GAMEOVER=false;
-			// var piecesArr = [	[p1x,p1h,p1b,p1k,p1q,p1b,p1h,p1r],
-			// 					[p11,p12,p13,p14,p15,p16,p17,p18],
-			// 					[non,non,non,non,non,non,non,non],
-			// 					[non,non,non,non,non,non,non,non],
-			// 					[non,non,non,non,non,p1k,non,non],
-			// 					[non,non,non,non,non,non,non,non],
-			// 					[p21,p22,p23,p24,p25,p26,p27,p28],
-			// 					[p2x,p2h,p2b,p2q,p2k,p2b,p2h,p2r]	];
-
-			var piecesArr = [	[p1x,p1h,p1b,p1k,p1q,p1b,p1h,p1r],
-								[p11,p12,p13,p14,non,non,non,non],
+			var piecesArr = [	[p1x,p1h,p1b,p1q,p1k,p1b,p1h,p1r],
+								[p11,p12,p13,p14,p15,p16,p17,p18],
 								[non,non,non,non,non,non,non,non],
 								[non,non,non,non,non,non,non,non],
 								[non,non,non,non,non,non,non,non],
 								[non,non,non,non,non,non,non,non],
-								[p21,p22,p23,p24,non,non,non,non],
+								[p21,p22,p23,p24,p25,p26,p27,p28],
 								[p2x,p2h,p2b,p2q,p2k,p2b,p2h,p2r]	];
+
+			// var piecesArr = [	[p1x,p1h,p1b,p1k,p1q,p1b,p1h,p1r],
+			// 					[p11,p12,p13,p14,non,non,non,non],
+			// 					[non,non,non,non,non,non,non,non],
+			// 					[non,non,non,non,non,non,non,non],
+			// 					[non,non,non,non,non,non,non,non],
+			// 					[non,non,non,non,non,non,non,non],
+			// 					[p21,p22,p23,p24,non,non,non,non],
+			// 					[p2x,p2h,p2b,p2q,p2k,p2b,p2h,p2r]	];
 			piecesArr = rotate2d(piecesArr);
 
 //	MouseEvents for pieces with callbacks
@@ -166,6 +175,35 @@ September 16, 2012-->
 					}
 				}
 				else if(piecesArr[x1][y1] instanceof king){
+					//CASTLE case 2 orientation
+					// if(piecesArr[x1][y1].colorID==1)
+					// 	if(firstMove&&x2==6){
+					// 		piecesArr[6][7]=piecesArr[x1][y1]//king
+					// 		piecesArr[5][7]=piecesArr[7][7]//corner rook
+					// 		piecesArr[4][7]=non
+					// 		piecesArr[7][7]=non
+					// 	}
+					// 	else if(firstMove&&x2==2){
+					// 		piecesArr[2][7]=piecesArr[x1][y1]//king
+					// 		piecesArr[3][7]=piecesArr[0][7]//corner rook
+					// 		piecesArr[0][7]=non
+					// 		piecesArr[1][7]=non
+					// 		piecesArr[4][7]=non
+					// 	}
+					// else if(piecesArr[x1][y1].colorID==-1)
+					// 	if(firstMove&&x2==6){
+					// 		piecesArr[6][0]=piecesArr[x1][y1]//king
+					// 		piecesArr[5][0]=piecesArr[7][0]//corner rook
+					// 		piecesArr[4][0]=non
+					// 		piecesArr[7][0]=non
+					// 	}
+					// 	else if(firstMove&&x2==2){
+					// 		piecesArr[2][0]=piecesArr[x1][y1]//king
+					// 		piecesArr[3][0]=piecesArr[0][0]//corner rook
+					// 		piecesArr[0][0]=non
+					// 		piecesArr[1][0]=non
+					// 		piecesArr[4][0]=non
+					// 	}	
 					piecesArr[x1][y1].firstMove=false;
 				}
 				else if(piecesArr[x1][y1] instanceof rook){
@@ -173,7 +211,9 @@ September 16, 2012-->
 				}
 
 				if(piecesArr[x2][y2] instanceof king){
-					alert("Player "+piecesArr[x1][y1].color+" wins!");
+					clearInterval(myInt);
+					alert("Player "+piecesArr[x1][y1].color+" wins! Press new game to start over.");
+					GAMEOVER=true;
 				}
 				piecesArr[x2][y2]=piecesArr[x1][y1];
 				piecesArr[x1][y1]=non;
@@ -185,18 +225,43 @@ September 16, 2012-->
 					for (c = 0; c < 8; c++){
 						ctx5.font = "6pt Arial";
 						// if(piecesArr[r][c].color == "White" || piecesArr[r][c].color == "Black"){
-							ctx5.fillText(piecesArr[r][c].talk(),r*50+55,c*50+75);
+							// ctx5.fillText(piecesArr[r][c].talk(),r*50+55,c*50+75);
+						if (piecesArr[r][c] instanceof pawn)
+							if (piecesArr[r][c].colorID==1)
+								ctx5.drawImage(piecesPNG,0,75,30,55,r*50+68,c*50+60,15,33)
+							else
+								ctx5.drawImage(piecesPNG,550,75,30,55,r*50+68,c*50+60,15,33)
+						else if (piecesArr[r][c] instanceof rook)
+							if (piecesArr[r][c].colorID==1)
+								ctx5.drawImage(piecesPNG,30,50,45,80,r*50+66,c*50+56,20,40)
+							else
+								ctx5.drawImage(piecesPNG,500,45,45,80,r*50+66,c*50+56,20,40)
+						else if (piecesArr[r][c] instanceof knight)
+							if (piecesArr[r][c].colorID==1)
+								ctx5.drawImage(piecesPNG,85,45,50,85,r*50+64,c*50+60,24,36)
+							else
+								ctx5.drawImage(piecesPNG,450,45,50,85,r*50+64,c*50+60,24,36)
+						else if (piecesArr[r][c] instanceof bishop)
+							if (piecesArr[r][c].colorID==1)
+								ctx5.drawImage(piecesPNG,132,35,50,95,r*50+62,c*50+60,25,36)
+							else
+								ctx5.drawImage(piecesPNG,390,35,50,95,r*50+62,c*50+60,25,36)
+						else if (piecesArr[r][c] instanceof queen)
+							if (piecesArr[r][c].colorID==1)
+								ctx5.drawImage(piecesPNG,185,20,50,110,r*50+64,c*50+55,25,42)
+							else
+								ctx5.drawImage(piecesPNG,340,20,50,110,r*50+64,c*50+55,25,42)
+						else if (piecesArr[r][c] instanceof king)
+							if (piecesArr[r][c].colorID==1)
+								ctx5.drawImage(piecesPNG,240,0,50,130,r*50+64,c*50+50,28,48)
+							else
+								ctx5.drawImage(piecesPNG,295,0,50,130,r*50+64,c*50+50,28,48)
 						// }
 					}
 				}
 			}
 			function blue_highlight(x,y){ //CURRENT POSITION
 				ctx2.clearRect(0, 0, myPosition.width, myPosition.height);
-				// if(turn==1)
-				// 	ctx2.fillText("White's Turn", 500, 400);
-				// else
-				// 	ctx2.fillText("Black's Turn", 500, 400)
-
 				if(y>100&&x>100&&y<500&&x<500){ //only draw on the actual board
 					ctx2.drawImage(blueHighlight,Math.floor(x/50)*50-50,Math.floor(y/50)*50-50,50,50);
 					// posStr = ((letterArr[Math.floor(x/50)-2]) +","+ (Math.floor(y/50)-2).toString();
@@ -209,17 +274,18 @@ September 16, 2012-->
 					x1=Math.floor(x/50)-2
 					y1=Math.floor(y/50)-2
 					ctx3.clearRect(0, 0, myPosition.width, myPosition.height);
+					ctx4.clearRect(0, 0, myPosition.width, myPosition.height);
 					
 					if(piecesArr[x1][y1].colorID == -1 && turn == 1)
 						alert("White's move..")
 					else if(piecesArr[x1][y1].colorID == 1 && turn == -1)
 						alert("Black's move..")
 					else if(firstClick==true){
-						posStr = (Math.floor(x/50)-2).toString() +","+ (Math.floor(y/50)-2).toString();
-						ctx3.fillText(posStr, 500, 150);
+						posStr = letterArr[Math.floor(x/50)-2] +","+ (Math.floor(y/50)-2).toString();
+						ctx4.fillText(posStr, 500, 150);
 						//TODO if piecesArr[x][y] not correct color then cant move it
 						typeStr = piecesArr[x1][y1].talk();
-						ctx3.fillText(typeStr, 500, 100);
+						ctx4.fillText(typeStr, 500, 100);
 						if(piecesArr[x1][y1].colorID==1 || piecesArr[x1][y1].colorID==-1){
 							ctx3.drawImage(greenHighlight,Math.floor(x/50)*50-50,Math.floor(y/50)*50-50,50,50);
 							firstClick=false;
@@ -231,34 +297,39 @@ September 16, 2012-->
 				if(y>100&&x>100&&y<500&&x<500){ //only draw on the actual board
 					x2=Math.floor(x/50)-2
 					y2=Math.floor(y/50)-2
-					ctx4.clearRect(0, 0, myPosition.width, myPosition.height);
 					if(piecesArr[x2][y2].colorID == piecesArr[x1][y1].colorID){
+						if(piecesArr[x2][y2] instanceof rook){
+							
+						}
 						firstClick=true;
 						green_highlight(x,y);
 					}
 					else if(firstClick==false){
-						posStr = (x2).toString() +","+ (y2).toString();
+						posStr = letterArr[Math.floor(x/50)-2] +","+ (y2).toString();
+						ctx4.clearRect(550, 100, 100, 100);
 						ctx4.fillText(posStr, 550, 150);
 						if(piecesArr[x1][y1].checkValidMove(x1,y1,x2,y2) && piecesArr[x1][y1].colorID!=piecesArr[x2][y2].colorID){//not same color
 							// ctx4.drawImage(greenHighlight,Math.floor(x/50)*50-50,Math.floor(y/50)*50-50,50,50);
-							// alert("move is valid");
 							movePiece(x1,y1,x2,y2);
 							firstClick=true;
 							turn=turn*-1;
-/////////////////////////////do not do anything that requires turn based events after this//////////////////////////////////////////
+ 								/////////////////////////////do not do anything that requires turn based events after this//////////////////////////////////////////
 							checkKing(turn);//checking the opposite king for a check
-							ctx3.clearRect(0, 0, myPosition.width, myPosition.height);
+							// ctx3.clearRect(0, 0, myPosition.width, myPosition.height);
 							validHighlightArray.length=0;
 							if(turn==1)
 								ctx4.fillText("White's Turn", 500, 400);
 							else
 								ctx4.fillText("Black's Turn", 500, 400);
 						}
-						else ctx4.drawImage(redHighlight,Math.floor(x/50)*50-50,Math.floor(y/50)*50-50,50,50); //draw RED if not validMove
+						else {
+							ctx4.drawImage(redHighlight,Math.floor(x/50)*50-50,Math.floor(y/50)*50-50,50,50); //draw RED if not validMove
+						}
 					}
 				}
 			}
 			function resetPieces() {
+				GAMEOVER = false;
 				ctx5.clearRect(0, 0, myPieces.width, myPieces.height);
 				var w = myPieces.width;
 				myPieces.width = 1;
@@ -284,8 +355,13 @@ September 16, 2012-->
 				p17 = new pawn(1); // pawn 1
 				p18 = new pawn(1); // pawn 1
 
+				p1x = new rook(1); // rook 2
+				p2x = new rook(0); // rook 2
+				p1r = new rook(1); // rook 2
+				p2r = new rook(0); // rook 2
+
 				ori=1;//orientation
-				piecesArr = [	[p1x,p1h,p1b,p1k,p1q,p1b,p1h,p1r],
+				piecesArr = [	[p1x,p1h,p1b,p1q,p1k,p1b,p1h,p1r],
 								[p11,p12,p13,p14,p15,p16,p17,p18],
 								[non,non,non,non,non,non,non,non],
 								[non,non,non,non,non,non,non,non],
@@ -340,23 +416,23 @@ September 16, 2012-->
 				ctx.shadowOffsetX = 2;
 				ctx.shadowOffsetY = 2;
 				ctx.shadowBlur = 5;
-				ctx.fillStyle="#000000";
+				ctx.fillStyle="#BBBBBB";
 
 				for(i=1; i<9; i++){
 					for(j=1; j<9; j++){
-						// ctx.fillRect(i*50,j*50,50,50);
+						ctx.fillRect(i*50,j*50,50,50);
 						j++;
 					}
 					i++;
 				}
 				for(i=2; i<10; i++){
 					for(j=2; j<10; j++){
-						// ctx.fillRect(i*50,j*50,50,50);
+						ctx.fillRect(i*50,j*50,50,50);
 						j++;
 					}
 					i++;
 				}
-
+				ctx.fillStyle="#000000";
 				ctx.shadowOffsetX = 0;
 				ctx.shadowOffsetY = 0;
 				ctx.shadowBlur = 0;
@@ -422,7 +498,6 @@ September 16, 2012-->
 			}
 			function checkKing(color){
 				enumerateOp(color);
-				// console.log("Checking KING")
 				for (e=0;e<enumerated.length;e++){
 					temp1 = enumerated[e][0];
 					temp2 = enumerated[e][1];
@@ -453,17 +528,21 @@ September 16, 2012-->
 					ctx3.drawImage(greenHighlight,validHighlightArray[q][0]*50+50,validHighlightArray[q][1]*50+50,50,50);
 				}
 			}
+			function randomMoveInterval(){
+				myInt = setInterval(function(){randomMove()},100);
+			}
+			function stopInterval(){
+				clearInterval(myInt);
+			}
+
 		</script>
 	</div>
 
-	<button type="button" onclick="resetPieces()">New Game</button>
-	<button type="button" onclick="rotateBoard()">Rotate Board</button>
-	<button type="button" onclick="randomMove()">Random Move</button>
-	<button type="button" onclick="highlightPaths()">Highlight Paths</button>
+
 
 	<p id="Coords">0,0</p>
 	<p id="ClickCoords">0,0</p>
-	<p id="CellCoords">0,0</p>
+	<p > Author Jon Ng Sept 18, 2012</p>
 
 </body>
 
