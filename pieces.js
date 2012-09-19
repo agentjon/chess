@@ -4,6 +4,7 @@
 				this.color = (colorP) ? "White" : "Black";
 				this.colorID = (colorP) ? 1 : -1;
 				this.firstMove = 1; // true
+				this.enpassed = false;
 				this.talk = function() {
 					return this.color+" "+this.firstMove;
 				}
@@ -11,49 +12,88 @@
 					// console.log("pawnnnnn")
 					if(piecesArr[x1][y1].color=="Black"){//BLACK PAWNS only
 						switch(ori){//all different orientations of the board 
-							case 1://white LEFT																					up attack																						down attack
-								if(piecesArr[x1-1][y1].colorID==0 && x1-x2<2+this.firstMove&&x1-x2>0&&y2-y1==0&&piecesArr[x2][y2].colorID==0 || x2-x1==-1&&y2-y1==-1&&piecesArr[x2][y2].colorID==-(this.colorID) || x2-x1==-1&&y2-y1==1&&piecesArr[x2][y2].colorID==-(this.colorID))
-									return true;
+							// case 1://white LEFT																					up attack																						down attack
+							// 	if(piecesArr[x1-1][y1].colorID==0 && x1-x2<2+this.firstMove&&x1-x2>0&&y2-y1==0&&piecesArr[x2][y2].colorID==0 || x2-x1==-1&&y2-y1==-1&&piecesArr[x2][y2].colorID==-(this.colorID) || x2-x1==-1&&y2-y1==1&&piecesArr[x2][y2].colorID==-(this.colorID))
+							// 		return true;
+							// 	break;
+							case 2://white BOT = black TOP																				left attack																						right attack
+								if(piecesArr[x1][y1+1].colorID==0 && y2-y1<2+this.firstMove && y2-y1>0 && x2-x1==0 && zero(x2,y2))
+									return true; //moving 1 or 2 forward and if 2 then no blockers
+								else if(x2-x1==-1 && y2-y1==1 && enemyPiece(x2,y2))
+								 	return true; //capture left
+								else if(x2-x1==-1 && y2-y1==1 && piecesArr[x2][y2-1].colorID==-(this.colorID) && zero(x2,y2) && enpassant(x2,y2+1)){
+									this.enpassed=true;
+									return true; //enpassant left and no blockers
+								}
+								else if(x2-x1==1 && y2-y1==1 && enemyPiece(x2,y2))
+									return true; //capture right
+								else if(x2-x1==1 && y2-y1==1 && piecesArr[x2][y2-1].colorID==-(this.colorID) && zero(x2,y2) && enpassant(x2,y2+1)){
+									this.enpassed=true;
+									return true; //enpassant right and no blockers
+								}
 								break;
-							case 2://white BOT 																					left attack																						right attack
-								if(piecesArr[x1][y1+1].colorID==0 && y2-y1<2+this.firstMove&&y2-y1>0&&x2-x1==0&&piecesArr[x2][y2].colorID==0 || x2-x1==-1&&y2-y1==1&&piecesArr[x2][y2].colorID==-(this.colorID) || x2-x1==1&&y2-y1==1&&piecesArr[x2][y2].colorID==-(this.colorID))
-									return true;
-								break;
-							case 3://white RIGHT																					down attack																						up attack
-								if(piecesArr[x1+1][y1].colorID==0 || x2-x1<2+this.firstMove&&x2-x1>0&&y2-y1==0&&piecesArr[x2][y2].colorID==0 || x2-x1==1&&y2-y1==1&&piecesArr[x2][y2].colorID==-(this.colorID) || x2-x1==1&&y2-y1==-1&&piecesArr[x2][y2].colorID==-(this.colorID))
-									return true;
-								break;
-							case 4://white TOP																					left attack																						right attack
-								if(piecesArr[x1][y1-1].colorID==0 || y1-y2<2+this.firstMove&&y1-y2>0&&x2-x1==0&&piecesArr[x2][y2].colorID==0 || x2-x1==-1&&y2-y1==-1&&piecesArr[x2][y2].colorID==-(this.colorID) || x2-x1==1&&y2-y1==-1&&piecesArr[x2][y2].colorID==-(this.colorID))
-									return true;
-								break;
+							// case 3://white RIGHT																					down attack																						up attack
+							// 	if(piecesArr[x1+1][y1].colorID==0 || x2-x1<2+this.firstMove&&x2-x1>0&&y2-y1==0&&piecesArr[x2][y2].colorID==0 || x2-x1==1&&y2-y1==1&&piecesArr[x2][y2].colorID==-(this.colorID) || x2-x1==1&&y2-y1==-1&&piecesArr[x2][y2].colorID==-(this.colorID))
+							// 		return true;
+							// 	break;
+							// case 4://white TOP																					left attack																						right attack
+							// 	if(piecesArr[x1][y1-1].colorID==0 || y1-y2<2+this.firstMove&&y1-y2>0&&x2-x1==0&&piecesArr[x2][y2].colorID==0 || x2-x1==-1&&y2-y1==-1&&piecesArr[x2][y2].colorID==-(this.colorID) || x2-x1==1&&y2-y1==-1&&piecesArr[x2][y2].colorID==-(this.colorID))
+							// 		return true;
+							// 	break;
 							default://nothing
 						}
 					}
 					else{//WHITE PAWNS only
 						switch(ori){
-							case 1://white LEFT
-								if(piecesArr[x1+1][y1].colorID==0 && x2-x1<2+this.firstMove&&x2-x1>0&&y2-y1==0&&piecesArr[x2][y2].colorID==0 || x2-x1==1&&y2-y1==-1&&piecesArr[x2][y2].colorID==-(this.colorID) || x2-x1==1&&y2-y1==1&&piecesArr[x2][y2].colorID==-(this.colorID))
-									return true;
-								break;
+							// case 1://white LEFT
+							// 	if(piecesArr[x1+1][y1].colorID==0 && x2-x1<2+this.firstMove&&x2-x1>0&&y2-y1==0&&piecesArr[x2][y2].colorID==0 || x2-x1==1&&y2-y1==-1&&piecesArr[x2][y2].colorID==-(this.colorID) || x2-x1==1&&y2-y1==1&&piecesArr[x2][y2].colorID==-(this.colorID))
+							// 		return true;
+							// 	break;
 							case 2://white BOT																					left attack			 																			right attack
-								if(piecesArr[x1][y1-1].colorID==0 && y1-y2<2+this.firstMove&&y1-y2>0&&x2-x1==0&&piecesArr[x2][y2].colorID==0 || x2-x1==-1&&y2-y1==-1&&piecesArr[x2][y2].colorID==-(this.colorID) || x2-x1==1&&y2-y1==-1&&piecesArr[x2][y2].colorID==-(this.colorID))
-									return true;
+								if(piecesArr[x1][y1-1].colorID==0 && y1-y2<2+this.firstMove && y1-y2>0 && x2-x1==0 && zero(x2,y2))
+									return true; //moving 1 or 2 forward and if 2 then no blockers
+								else if(x2-x1==-1 && y2-y1==-1 && enemyPiece(x2,y2))
+									return true; //capture left
+								else if(x2-x1==-1 && y2-y1==-1 && piecesArr[x2][y2+1].colorID==-(this.colorID) && zero(x2,y2) && enpassant(x2,y2-1)){
+									this.enpassed=true;
+									return true; //enpassant left and no blockers
+								}
+								else if(x2-x1==1 && y2-y1==-1 && enemyPiece(x2,y2))
+									return true; //capture right
+								else if(x2-x1==1 && y2-y1==-1 && piecesArr[x2][y2+1].colorID==-(this.colorID) && zero(x2,y2) && enpassant(x2,y2-1)){
+									this.enpassed=true;
+									return true; //enpassant right and no blockers
+								}
 								break;
-							case 3://white RIGHT
-								if(piecesArr[x1-1][y1].colorID==0|| x1-x2<2+this.firstMove&&x1-x2>0&&y2-y1==0&&piecesArr[x2][y2].colorID==0 || x2-x1==-1&&y2-y1==1&&piecesArr[x2][y2].colorID==-(this.colorID) || x2-x1==-1&&y2-y1==-1&&piecesArr[x2][y2].colorID==-(this.colorID))
-									return true;
-								break;
-							case 4://white TOP
-								if(piecesArr[x1][y1+1].colorID==0 || y2-y1<2+this.firstMove&&y2-y1>0&&x2-x1==0&&piecesArr[x2][y2].colorID==0 || x2-x1==-1&&y2-y1==1&&piecesArr[x2][y2].colorID==-(this.colorID) || x2-x1==1&&y2-y1==1&&piecesArr[x2][y2].colorID==-(this.colorID))
-									return true;
-								break;
+							// case 3://white RIGHT
+							// 	if(piecesArr[x1-1][y1].colorID==0|| x1-x2<2+this.firstMove&&x1-x2>0&&y2-y1==0&&piecesArr[x2][y2].colorID==0 || x2-x1==-1&&y2-y1==1&&piecesArr[x2][y2].colorID==-(this.colorID) || x2-x1==-1&&y2-y1==-1&&piecesArr[x2][y2].colorID==-(this.colorID))
+							// 		return true;
+							// 	break;
+							// case 4://white TOP
+							// 	if(piecesArr[x1][y1+1].colorID==0 || y2-y1<2+this.firstMove&&y2-y1>0&&x2-x1==0&&piecesArr[x2][y2].colorID==0 || x2-x1==-1&&y2-y1==1&&piecesArr[x2][y2].colorID==-(this.colorID) || x2-x1==1&&y2-y1==1&&piecesArr[x2][y2].colorID==-(this.colorID))
+							// 		return true;
+							// 	break;
 							default://nothing
 						}
 					}
 				return false;
 				}//checkValid
 			}//pawn
+
+		//pawns functions
+			function enpassant(x2,y2){
+				if(enpassing[0]==x2&&enpassing[1]==y2)return true;
+				else return false;
+			}
+			function zero(x2,y2){
+				if(piecesArr[x2][y2].colorID==0)return true;
+				else return false;
+			}
+			function enemyPiece(x2,y2){
+				if(piecesArr[x2][y2].colorID==-(piecesArr[x1][y1].colorID)) return true;
+				else return false;
+			}
+
 			function knight(colorP){
 				this.color = (colorP) ? "White" : "Black";
 				this.colorID = (colorP) ? 1 : -1;
@@ -135,16 +175,28 @@
 				}
 				this.checkValidMove = function(x1,y1,x2,y2){
 					//CASTLE case 2 orientation
-					// if(piecesArr[4][7].colorID==1)//white is on bot
-					// 	if(x2==6&&y2==7&&piecesArr[7][7].firstMove==true&&piecesArr[6][7].colorID==0&&piecesArr[5][7].colorID==0)
-					// 		return true;//right side castle
-					// 	else if(x2==2&&y2==7&&piecesArr[7][0].firstMove==true&&piecesArr[1][7].colorID==0&&piecesArr[2][7].colorID==0&&piecesArr[3][7].colorID==0)
-					// 		return true;//left side castle
-					// if(piecesArr[4][0].colorID==-1)//black is on top
-					// 	if(x2==0&&y2==0&&piecesArr[0][0].firstMove==true&&piecesArr[1][0].colorID==0&&piecesArr[2][0].colorID==0&&piecesArr[3][0].colorID==0)
-					// 		return true;//left side castle
-					// 	else if(x2==7&&y2==0&&piecesArr[7][0].firstMove==true&&piecesArr[6][0].colorID==0&&piecesArr[5][0].colorID==0)
-					// 		return true;//right side castle
+					if(piecesArr[x1][y1].firstMove==true && piecesArr[x1][y1].colorID==1 && y2==7){//white is on bot
+						//white right side castle
+						if(x2==6 && piecesArr[7][7].firstMove==true && zero(6,7) && zero(5,7)){
+							console.log(y2)
+							return true;
+						}
+						//white left side castle
+						else if(x2==2 && piecesArr[0][7].firstMove==true && zero(1,7) && zero(2,7) && zero(3,7)){
+							return true;
+						}
+					}
+					if(piecesArr[x1][y1].firstMove==true && piecesArr[x1][y1].colorID==-1 && y2==0){//black is on top
+						//black left side castle
+						if(x2==2 && piecesArr[0][0].firstMove==true && zero(1,0) && zero(2,0) && zero(3,0)){
+							console.log(y2)
+							return true;
+						}
+						//black right side castle
+						else if(x2==6 && piecesArr[7][0].firstMove==true && zero(6,0) && zero(5,0)){
+							return true;
+						}
+					}
 					if(piecesArr[x1][y1].colorID==piecesArr[x2][y2].colorID) return false;
 					if(Math.abs(x2-x1)<2 && Math.abs(y2-y1)<2){
 						return true;

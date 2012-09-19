@@ -2,16 +2,16 @@
 September 16, 2012-->
 <html>
 <head>
-	<div>2 PLAYER CHESS MASTER 3000</div>
+	<div>TWO PLAYER CHESS MASTER 9000</div>
 </head>
 <body style="background-color:#666666;">
-	<button type="button" onclick="resetPieces()">New Game</button>
+	<button type="button" onclick="newBoard()">New Game</button>
 	<!-- <button type="button" onclick="rotateBoard()">Rotate Board</button> -->
 	<button type="button" onclick="randomMove()">Random Move</button>
 	<button type="button" onclick="randomMoveInterval()">Random Move 0.1s Interval</button>
 	<button type="button" onclick="stopInterval()">Stop Interval</button>	
-	<button type="button" onclick="highlightPaths()">Highlight Paths</button>
-	<div style= "height: 400px "></div>
+	<button type="button" onclick="highlightPaths()">Highlight Path of Selected</button>
+	<div style= "height: 380px "></div>
 
 	<div style=" align:center;">
 		<canvas id="myBoard" width="700" height="500" style="border:2px solid #000000; 
@@ -35,16 +35,18 @@ September 16, 2012-->
 		<script type="text/javascript" src="jquery.js"></script>
 		<!-- load piece types -->
 		<script type="text/javascript" src="pieces.js"></script>
+		<script type="text/javascript" src="board.js"></script>
 		<script type="text/javascript">
 			var myInt;
-			var firstClick=true;
+			var firstClick=true; //used for pawns, king(castle), rooks(castle)
 			var posStr;	//coord for blue moving
 			var typeStr; //name of piece
 			var letterArr = ["A","B","C","D","E","F","G","H"];
 			var x1,y1,x2,y2; //coords for selections
 			var ori = 1; //1=whiteLEFT, 2=whiteBOT, 3=whiteRIGHT, 4whiteTOP
-			var turn = 1;
+			var turn = 1; // white =1 , black = -1
 			var KingCoord = new Array();
+			var enpassing = new Array();			
 			var temp1, temp2;
 
 			//canvas reference and context
@@ -65,7 +67,6 @@ September 16, 2012-->
 			var greenHighlight=document.getElementById("greenDot");
 			var yellowHighlight=document.getElementById("yellowDot");
 			var piecesPNG=document.getElementById("window");
-
 
 			//black pieces = 0 (false)
 			var p21 = new pawn(0); // pawn 1
@@ -119,15 +120,6 @@ September 16, 2012-->
 								[non,non,non,non,non,non,non,non],
 								[p21,p22,p23,p24,p25,p26,p27,p28],
 								[p2x,p2h,p2b,p2q,p2k,p2b,p2h,p2r]	];
-
-			// var piecesArr = [	[p1x,p1h,p1b,p1k,p1q,p1b,p1h,p1r],
-			// 					[p11,p12,p13,p14,non,non,non,non],
-			// 					[non,non,non,non,non,non,non,non],
-			// 					[non,non,non,non,non,non,non,non],
-			// 					[non,non,non,non,non,non,non,non],
-			// 					[non,non,non,non,non,non,non,non],
-			// 					[p21,p22,p23,p24,non,non,non,non],
-			// 					[p2x,p2h,p2b,p2q,p2k,p2b,p2h,p2r]	];
 			piecesArr = rotate2d(piecesArr);
 
 //	MouseEvents for pieces with callbacks
@@ -150,73 +142,97 @@ September 16, 2012-->
 				}); 
 			})
 			initBoard();
-			drawPieces();			
+			drawPieces();
 			function movePiece(x1,y1,x2,y2){
+				if(piecesArr[x2][y2] instanceof king && piecesArr[x2][y2].colorID!=turn){
+					clearInterval(myInt);
+					alert("Player "+piecesArr[x1][y1].color+" wins! Press new game to start over.");
+					GAMEOVER=true;
+				}
 				if(piecesArr[x1][y1] instanceof pawn){
+					//EN PASSANT 
+					if(piecesArr[x1][y1].enpassed){
+						piecesArr[x1][y1].enpassed=false;
+						piecesArr[enpassing[2]][enpassing[3]]=non;
+					}
+					if(piecesArr[x1][y1].firstMove){
+						enpassing[0]=x1;
+						enpassing[1]=y1;
+						enpassing[2]=x2;
+						enpassing[3]=y2;
+					}
 					piecesArr[x1][y1].firstMove=false;
 					switch(ori){ //PAWN PROMOTION
-						case 1: //1=whiteLEFT, 2=whiteBOT, 3=whiteRIGHT, 4whiteTOP
-							if(x2==7){piecesArr[x1][y1]=p1q;}
-							else if(x2==0){piecesArr[x1][y1]=p2q;}
-							break;
+						// case 1: //1=whiteLEFT, 2=whiteBOT, 3=whiteRIGHT, 4whiteTOP
+						// 	if(x2==7){piecesArr[x1][y1]=p1q;}
+						// 	else if(x2==0){piecesArr[x1][y1]=p2q;}
+						// 	break;
 						case 2: 
-							if(y2==0){piecesArr[x1][y1]=p1q;}
-							else if(y2==7){piecesArr[x1][y1]=p2q;}
+							if(y2==0){piecesArr[x1][y1]=p1q;}//white promo
+							else if(y2==7){piecesArr[x1][y1]=p2q;}//black promo
 							break;
-						case 3:
-							if(x2==0){piecesArr[x1][y1]=p1q;}
-							else if(x2==7){piecesArr[x1][y1]=p2q;}
-							break;
-						case 4:
-							if(y2==7){piecesArr[x1][y1]=p1q;}
-							else if(y2==0){piecesArr[x1][y1]=p2q;}
-							break;
+						// case 3:
+						// 	if(x2==0){piecesArr[x1][y1]=p1q;}
+						// 	else if(x2==7){piecesArr[x1][y1]=p2q;}
+						// 	break;
+						// case 4:
+						// 	if(y2==7){piecesArr[x1][y1]=p1q;}
+						// 	else if(y2==0){piecesArr[x1][y1]=p2q;}
+						// 	break;
 						default://nothing
 					}
 				}
 				else if(piecesArr[x1][y1] instanceof king){
 					//CASTLE case 2 orientation
-					// if(piecesArr[x1][y1].colorID==1)
-					// 	if(firstMove&&x2==6){
-					// 		piecesArr[6][7]=piecesArr[x1][y1]//king
-					// 		piecesArr[5][7]=piecesArr[7][7]//corner rook
-					// 		piecesArr[4][7]=non
-					// 		piecesArr[7][7]=non
-					// 	}
-					// 	else if(firstMove&&x2==2){
-					// 		piecesArr[2][7]=piecesArr[x1][y1]//king
-					// 		piecesArr[3][7]=piecesArr[0][7]//corner rook
-					// 		piecesArr[0][7]=non
-					// 		piecesArr[1][7]=non
-					// 		piecesArr[4][7]=non
-					// 	}
-					// else if(piecesArr[x1][y1].colorID==-1)
-					// 	if(firstMove&&x2==6){
-					// 		piecesArr[6][0]=piecesArr[x1][y1]//king
-					// 		piecesArr[5][0]=piecesArr[7][0]//corner rook
-					// 		piecesArr[4][0]=non
-					// 		piecesArr[7][0]=non
-					// 	}
-					// 	else if(firstMove&&x2==2){
-					// 		piecesArr[2][0]=piecesArr[x1][y1]//king
-					// 		piecesArr[3][0]=piecesArr[0][0]//corner rook
-					// 		piecesArr[0][0]=non
-					// 		piecesArr[1][0]=non
-					// 		piecesArr[4][0]=non
-					// 	}	
+					if(piecesArr[x1][y1].colorID==1)//////////////////white
+						if(piecesArr[x1][y1].firstMove&&piecesArr[7][7].firstMove&&x2==6){
+							console.log("white castle right")
+							piecesArr[6][7]=piecesArr[x1][y1]//king
+							piecesArr[6][7].firstMove=false;
+							piecesArr[5][7]=piecesArr[7][7]//corner rook
+							piecesArr[5][7].firstMove=false;
+							piecesArr[4][7]=non
+							piecesArr[7][7]=non
+						}
+						else if(piecesArr[x1][y1].firstMove&&piecesArr[0][7].firstMove&&x2==2){
+							console.log("white castle left")
+							piecesArr[2][7]=piecesArr[x1][y1]//king
+							piecesArr[2][7].firstMove=false;
+							piecesArr[3][7]=piecesArr[0][7]//corner rook
+							piecesArr[3][7].firstMove=false;
+							piecesArr[0][7]=non
+							piecesArr[1][7]=non
+							piecesArr[4][7]=non
+						}
+					if(piecesArr[x1][y1].colorID==-1)//////////////////black
+						if(piecesArr[x1][y1].firstMove&&x2==6){
+							console.log("black castle right")
+							piecesArr[6][0]=piecesArr[x1][y1]//king
+							piecesArr[6][0].firstMove=false;
+							piecesArr[5][0]=piecesArr[7][0]//corner rook
+							piecesArr[5][0].firstMove=false;
+							piecesArr[4][0]=non
+							piecesArr[7][0]=non
+						}
+						else if(piecesArr[x1][y1].firstMove&&x2==2){
+							console.log("black castle left")
+							piecesArr[2][0]=piecesArr[x1][y1]//king
+							piecesArr[2][0].firstMove=false;
+							piecesArr[3][0]=piecesArr[0][0]//corner rook
+							piecesArr[3][0].firstMove=false;
+							piecesArr[0][0]=non
+							piecesArr[1][0]=non
+							piecesArr[4][0]=non
+						}
 					piecesArr[x1][y1].firstMove=false;
 				}
 				else if(piecesArr[x1][y1] instanceof rook){
 					piecesArr[x1][y1].firstMove=false;
 				}
-
-				if(piecesArr[x2][y2] instanceof king){
-					clearInterval(myInt);
-					alert("Player "+piecesArr[x1][y1].color+" wins! Press new game to start over.");
-					GAMEOVER=true;
+				if(piecesArr[x1][y1].colorID!=0){
+					piecesArr[x2][y2]=piecesArr[x1][y1];//where you will move
+					piecesArr[x1][y1]=non;//where you came from
 				}
-				piecesArr[x2][y2]=piecesArr[x1][y1];
-				piecesArr[x1][y1]=non;
 				drawPieces();
 			}
 			function drawPieces(){
@@ -328,130 +344,7 @@ September 16, 2012-->
 					}
 				}
 			}
-			function resetPieces() {
-				GAMEOVER = false;
-				ctx5.clearRect(0, 0, myPieces.width, myPieces.height);
-				var w = myPieces.width;
-				myPieces.width = 1;
-				myPieces.width = w;
-
-				//reset all firstmoves and promotions of pawns
-				//black pieces = 0 (false)
-				p21 = new pawn(0); // pawn 1
-				p22 = new pawn(0); // pawn 1
-				p23 = new pawn(0); // pawn 1
-				p24 = new pawn(0); // pawn 1
-				p25 = new pawn(0); // pawn 1
-				p26 = new pawn(0); // pawn 1
-				p27 = new pawn(0); // pawn 1
-				p28 = new pawn(0); // pawn 1
-				//white pieces = 1 (true)
-				p11 = new pawn(1); // pawn 1
-				p12 = new pawn(1); // pawn 1
-				p13 = new pawn(1); // pawn 1
-				p14 = new pawn(1); // pawn 1
-				p15 = new pawn(1); // pawn 1
-				p16 = new pawn(1); // pawn 1
-				p17 = new pawn(1); // pawn 1
-				p18 = new pawn(1); // pawn 1
-
-				p1x = new rook(1); // rook 2
-				p2x = new rook(0); // rook 2
-				p1r = new rook(1); // rook 2
-				p2r = new rook(0); // rook 2
-
-				ori=1;//orientation
-				piecesArr = [	[p1x,p1h,p1b,p1q,p1k,p1b,p1h,p1r],
-								[p11,p12,p13,p14,p15,p16,p17,p18],
-								[non,non,non,non,non,non,non,non],
-								[non,non,non,non,non,non,non,non],
-								[non,non,non,non,non,non,non,non],
-								[non,non,non,non,non,non,non,non],
-								[p21,p22,p23,p24,p25,p26,p27,p28],
-								[p2x,p2h,p2b,p2q,p2k,p2b,p2h,p2r]	];
-				piecesArr = rotate2d(piecesArr);
-				turn = 1;//white start
-				firstClick = true;
-				drawPieces();
-				//TODO draw the pieces again 
-			}
-			function rotateBoard(){
-				piecesArr = rotate2d(piecesArr);
-				drawPieces();
-			}
-			function rotate2d(array){
-				//http://stackoverflow.com/questions/2799755/rotate-array-clockwise
-				R = array.length;
-				C = array[0].length;
-				var newArray = new Array(8);
-				for (var i = 0; i < 8; i++) {
-					newArray[i] = new Array(8);
-				}
-				for (r = 0; r < R; r++) {
-					for (c = 0; c < C; c++) {
-						newArray[c][R-1-r] = array[r][c];
-					}
-				}
-				//Orientation
-				ori++;
-				if (ori==5)
-					ori=1;
-
-				return newArray;
-			}
-			function initBoard(){
-				ctx2.font = "14pt Arial";
-				ctx3.font = "14pt Arial";
-				ctx4.font = "14pt Arial";
-
-				ctx.fillStyle="#000000";
-				ctx.shadowOffsetX = 3;
-				ctx.shadowOffsetY = 3;
-				ctx.shadowBlur = 6;
-				ctx.shadowColor = "black";
-
-				ctx.fillStyle="#FFFFFF"; //whiteback
-				ctx.fillRect(50,50,400,400);
-
-				ctx.shadowOffsetX = 2;
-				ctx.shadowOffsetY = 2;
-				ctx.shadowBlur = 5;
-				ctx.fillStyle="#BBBBBB";
-
-				for(i=1; i<9; i++){
-					for(j=1; j<9; j++){
-						ctx.fillRect(i*50,j*50,50,50);
-						j++;
-					}
-					i++;
-				}
-				for(i=2; i<10; i++){
-					for(j=2; j<10; j++){
-						ctx.fillRect(i*50,j*50,50,50);
-						j++;
-					}
-					i++;
-				}
-				ctx.fillStyle="#000000";
-				ctx.shadowOffsetX = 0;
-				ctx.shadowOffsetY = 0;
-				ctx.shadowBlur = 0;
-
-				ctx.beginPath();
-				ctx.lineWidth=2;
-				ctx.moveTo(49,49);
-				ctx.lineTo(49,449);
-				ctx.lineTo(449,449);
-				ctx.lineTo(449,49);
-				ctx.closePath();
-				ctx.stroke();
-				for(i=0;i<8;i++){
-					ctx.fillText(letterArr[i],i*50+75,25);
-				}
-				for(i=0;i<8;i++){
-					ctx.fillText(i+1,25,i*50+75);
-				}
-			}
+			
 			function enumerateOp(col){ // enumerateOPPOSITE(color): enumerates all the black pieces if white is passed in
 				enumerated.length=0;
 				for (ienu=0;ienu<8;ienu++){
@@ -468,33 +361,34 @@ September 16, 2012-->
 				}
 			}
 			function randomMove(){
-
-				enumerateOp(-turn);//pass in opposite to enumerate current 
-				console.log("TURN:"+turn)
-				randyEnum = Math.floor(Math.random()*enumerated.length)
-				console.log("randyEnum:"+randyEnum+" out of "+enumerated.length)
-				console.log("Picking to Move "+piecesArr[enumerated[randyEnum][0]][enumerated[randyEnum][1]].talk()+" at "+enumerated[randyEnum][0]+","+enumerated[randyEnum][1]);
-				// x1=enumerated[randyEnum][0];
-				// y1=enumerated[randyEnum][1];
-				firstClick=false
-				temp111=101+enumerated[randyEnum][0]*50
-				temp222=101+enumerated[randyEnum][1]*50
-				green_highlight(temp111,temp222);
-				highlightPaths();
-				if(validHighlightArray.length==0){
-					// console.log("redo");
-					randomMove()
-				}
-				else{//at least one possible move, so MOVE!
-					randyMove = Math.floor(Math.random()*validHighlightArray.length) 
-					console.log("randyMove:"+randyMove)
-					console.log("Picking to Move "+piecesArr[enumerated[randyEnum][0]][enumerated[randyEnum][1]].talk()+" to here "+validHighlightArray[randyMove][0]+","+validHighlightArray[randyMove][1]);
-					temp11=101+validHighlightArray[randyMove][0]*50
-					temp22=101+validHighlightArray[randyMove][1]*50
-					console.log(temp11+","+temp22)
-					red_highlight(temp11,temp22)
-					// ctx4.drawImage(redHighlight,temp11,temp22)
-				}
+				if(!GAMEOVER){
+					enumerateOp(-turn);//pass in opposite to enumerate current 
+					// console.log("TURN:"+turn)
+					randyEnum = Math.floor(Math.random()*enumerated.length)
+					// console.log("randyEnum:"+randyEnum+" out of "+enumerated.length)
+					console.log("Picking to Move "+piecesArr[enumerated[randyEnum][0]][enumerated[randyEnum][1]].talk()+" at "+enumerated[randyEnum][0]+","+enumerated[randyEnum][1]);
+					// x1=enumerated[randyEnum][0];
+					// y1=enumerated[randyEnum][1];
+					firstClick=false
+					temp111=101+enumerated[randyEnum][0]*50
+					temp222=101+enumerated[randyEnum][1]*50
+					green_highlight(temp111,temp222);
+					highlightPaths();
+					if(validHighlightArray.length==0){
+						// console.log("redo");
+						randomMove()
+					}
+					else{//at least one possible move, so MOVE!
+						randyMove = Math.floor(Math.random()*validHighlightArray.length) 
+						// console.log("randyMove:"+randyMove)
+						console.log("Picking to Move "+piecesArr[enumerated[randyEnum][0]][enumerated[randyEnum][1]].talk()+" to here "+validHighlightArray[randyMove][0]+","+validHighlightArray[randyMove][1]);
+						temp11=101+validHighlightArray[randyMove][0]*50
+						temp22=101+validHighlightArray[randyMove][1]*50
+						// console.log(temp11+","+temp22)
+						red_highlight(temp11,temp22)
+						// ctx4.drawImage(redHighlight,temp11,temp22)
+					}
+				}//gameover
 			}
 			function checkKing(color){
 				enumerateOp(color);
@@ -538,7 +432,8 @@ September 16, 2012-->
 		</script>
 	</div>
 
-
+<button type="button" onclick="castleBoard()">Test Castle</button>	
+<button type="button" onclick="enPassBoard()">Test en Passant</button>	
 
 	<p id="Coords">0,0</p>
 	<p id="ClickCoords">0,0</p>
